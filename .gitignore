@@ -1,0 +1,29 @@
+# === 1. 安全與敏感資訊 (絕對不能上傳) ===
+.env
+instance/*.db
+instance/
+config/.env  # 如果裡面有真實資料的話
+
+# === 2. Python 環境與快取 ===
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+
+# === 3. 自動化產出的資料 (避免污染 Repo) ===
+storage/*.docx
+storage/*.log
+storage/
+
+# === 4. IDE 與系統暫存檔 ===
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# === 5. 測試與除錯腳本 (如果你不想公開 src 裡的測試檔) ===
+src/import requests.py
+src/test_logic.py
+src/debug_gui.py

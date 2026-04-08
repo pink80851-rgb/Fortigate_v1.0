@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIP 申請進度追蹤 - 資訊室自動化系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .glow-rose { box-shadow: 0 0 15px rgba(225, 29, 72, 0.4); }
+        .glow-green { box-shadow: 0 0 15px rgba(34, 197, 94, 0.4); }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-800 via-slate-900 to-black min-h-screen flex items-center justify-center p-4 font-sans">
+
+    <div class="glass-morphism p-8 rounded-[2rem] shadow-2xl w-full max-w-lg">
+        <div class="text-center mb-8">
+            <div class="inline-block p-3 bg-rose-50 rounded-2xl mb-4">
+                <i class="fas fa-satellite-dish text-rose-600 text-2xl"></i>
+            </div>
+            <h2 class="text-3xl font-black text-slate-800 tracking-tight">申請進度查詢</h2>
+            <p class="text-sm text-slate-500 mt-2 font-medium">輸入單號獲取實時分配狀態</p>
+        </div>
+
+        <div class="flex gap-2 mb-10">
+            <input type="text" id="ticketId" placeholder="例如: REQ-0003" 
+                class="flex-1 px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-rose-500 outline-none font-mono text-lg transition-all shadow-sm"
+                onkeypress="if(event.keyCode==13) checkStatus()">
+            <button onclick="checkStatus()" class="bg-slate-900 text-white px-8 py-4 rounded-2xl font-bold hover:bg-rose-600 transition-all shadow-lg active:scale-95">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+
+        <div id="statusResult" class="hidden animate-fade-in">
+            <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
+                <div class="flex justify-between items-start mb-8">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-800" id="res_applicant">---</h3>
+                        <p class="text-xs text-slate-400 font-mono mt-1" id="res_no">REQ-0000</p>
+                        <p class="text-[10px] text-slate-400 mt-1 uppercase tracking-tighter" id="res_dept">Dept: ---</p>
+                    </div>
+                    <span id="statusBadge" class="px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider">---</span>
+                </div>
+
+                <div class="flex items-center justify-between mb-10 px-6 relative">
+                    <div class="flex flex-col items-center z-10">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold bg-rose-600 text-white glow-rose">
+                            <i class="fas fa-file-alt text-sm"></i>
+                        </div>
+                        <span class="text-[11px] mt-2 font-bold text-slate-600">提出申請</span>
+                    </div>
+
+                    <div id="line1" class="flex-1 h-1.5 mx-[-2px] bg-slate-100 transition-colors duration-500"></div>
+
+                    <div class="flex flex-col items-center z-10">
+                        <div id="step2" class="w-10 h-10 rounded-full flex items-center justify-center font-bold bg-slate-100 text-slate-300 transition-all duration-500">
+                            <i class="fas fa-server text-sm"></i>
+                        </div>
+                        <span class="text-[11px] mt-2 font-bold text-slate-400" id="step2_text">資訊部審核/開通</span>
+                    </div>
+
+                    <div id="line2" class="flex-1 h-1.5 mx-[-2px] bg-slate-100 transition-colors duration-500"></div>
+
+                    <div class="flex flex-col items-center z-10">
+                        <div id="step3" class="w-10 h-10 rounded-full flex items-center justify-center font-bold bg-slate-100 text-slate-300 transition-all duration-500">
+                            <i class="fas fa-check-circle text-sm"></i>
+                        </div>
+                        <span class="text-[11px] mt-2 font-bold text-slate-400" id="step3_text">服務已上線</span>
+                    </div>
+                </div>
+
+                <div id="allocationBox" class="hidden space-y-4">
+                    <div class="p-4 bg-slate-900 rounded-2xl text-white">
+                        <p class="text-[10px] text-slate-500 font-bold mb-3 tracking-widest uppercase">Network Resources</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-400 text-xs">內部伺服器 IP</span>
+                            <span class="font-mono text-rose-400 font-bold" id="res_int_ip">---</span>
+                        </div>
+                        <div class="flex items-center justify-between mt-2 border-t border-slate-800 pt-2">
+                            <span class="text-slate-400 text-xs">到期日期</span>
+                            <span class="font-mono text-slate-300 text-xs" id="res_expire">---</span>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-rose-50/50 border border-rose-100 rounded-2xl">
+                        <p class="text-[10px] text-rose-400 font-bold mb-3 tracking-widest uppercase text-center">Port Mapping (內 ➔ 外)</p>
+                        <div id="res_port_list" class="space-y-2 font-mono text-sm text-slate-700">
+                            </div>
+                    </div>
+                </div>
+
+                <button onclick="location.href='/'" class="w-full mt-6 py-3 text-slate-400 hover:text-slate-600 text-xs font-bold transition-colors">
+                    <i class="fas fa-arrow-left mr-1"></i> 返回首頁
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function checkStatus() {
+            const ticketId = document.getElementById('ticketId').value.trim();
+            const resultDiv = document.getElementById('statusResult');
+            const cleanId = ticketId.replace(/\s+/g, ''); 
+            const response = await fetch(`/api/check_status/${cleanId}`);
+            const encodedId = encodeURIComponent(ticketId.trim());
+            if (!ticketId) return;
+
+            try {
+                const response = await fetch(`/api/check_status/${ticketId}`);
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    resultDiv.classList.remove('hidden');
+                    
+                    // 基本資料填入
+                    document.getElementById('res_applicant').innerText = data.applicant;
+                    document.getElementById('res_no').innerText = ticketId;
+                    document.getElementById('res_dept').innerText = `Dept: ${data.dept || 'N/A'}`;
+                    document.getElementById('res_int_ip').innerText = data.int_ip;
+                    document.getElementById('res_expire').innerText = data.expire_date || '永久有效';
+
+                    const badge = document.getElementById('statusBadge');
+                    const step2 = document.getElementById('step2');
+                    const step3 = document.getElementById('step3');
+                    const line1 = document.getElementById('line1');
+                    const line2 = document.getElementById('line2');
+                    const allocBox = document.getElementById('allocationBox');
+
+                    // 重置 UI 狀態
+                    [step2, step3].forEach(s => s.className = "w-10 h-10 rounded-full flex items-center justify-center font-bold bg-slate-100 text-slate-300 transition-all duration-500");
+                    [line1, line2].forEach(l => l.className = "flex-1 h-1.5 mx-[-2px] bg-slate-100 transition-colors duration-500");
+                    allocBox.classList.add('hidden');
+
+                    // 根據 status (1:審核中, 2:待開通, 3:已結案) 切換
+                    if (data.current_status == 1) {
+                        badge.className = "px-4 py-1.5 rounded-full text-xs font-black bg-amber-100 text-amber-600 uppercase tracking-wider";
+                        badge.innerText = "Pending Review";
+                    } 
+                    else if (data.current_status == 2) {
+                        badge.className = "px-4 py-1.5 rounded-full text-xs font-black bg-blue-100 text-blue-600 uppercase tracking-wider";
+                        badge.innerText = "Processing";
+                        // 點亮 Step 2
+                        step2.className = "w-10 h-10 rounded-full flex items-center justify-center font-bold bg-blue-500 text-white shadow-lg";
+                        line1.className = "flex-1 h-1.5 mx-[-2px] bg-blue-500";
+                    } 
+                    else if (data.current_status == 3) {
+                        badge.className = "px-4 py-1.5 rounded-full text-xs font-black bg-green-100 text-green-600 uppercase tracking-wider";
+                        badge.innerText = "Completed";
+                        // 點亮所有步驟
+                        step2.className = "w-10 h-10 rounded-full flex items-center justify-center font-bold bg-rose-600 text-white";
+                        line1.className = "flex-1 h-1.5 mx-[-2px] bg-rose-600";
+                        step3.className = "w-10 h-10 rounded-full flex items-center justify-center font-bold bg-green-500 text-white glow-green";
+                        line2.className = "flex-1 h-1.5 mx-[-2px] bg-green-500";
+                        
+                        allocBox.classList.remove('hidden');
+
+                        // 處理 Port 列表
+                        const intPorts = data.int_port ? data.int_port.split(',') : [];
+                        const extPorts = data.ext_port ? data.ext_port.split(',') : [];
+                        let portHtml = "";
+                        intPorts.forEach((p, index) => {
+                            portHtml += `
+                                <div class="flex justify-between items-center bg-white p-2 px-4 rounded-xl shadow-sm border border-rose-100">
+                                    <span class="font-bold text-slate-600">${p.trim()}</span>
+                                    <i class="fas fa-link text-[10px] text-rose-300"></i>
+                                    <span class="font-bold text-rose-600">${extPorts[index] ? extPorts[index].trim() : '---'}</span>
+                                </div>`;
+                        });
+                        document.getElementById('res_port_list').innerHTML = portHtml || '<p class="text-center text-xs text-slate-400">無 Port 對應資料</p>';
+                    }
+                } else {
+                    alert("查無此單號: " + ticketId);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("系統連線異常，請聯繫資訊室 (Ext. 119)");
+            }
+        }
+    </script>
+</body>
+</html>

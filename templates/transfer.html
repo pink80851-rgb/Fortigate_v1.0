@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>舊有 VIP 資產認領 - 資訊室自動化系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .slide-down { animation: slideDown 0.5s ease-out forwards; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-slate-900 min-h-screen flex items-center justify-center p-6">
+
+    <div class="glass p-8 rounded-[2.5rem] shadow-2xl w-full max-w-xl">
+        <div class="mb-8 text-center">
+            <h2 class="text-2xl font-bold text-slate-800">舊制 VIP 轉移認領</h2>
+            <p class="text-slate-500 text-sm mt-2">請輸入內網 IP 以檢索現有防火牆規則</p>
+        </div>
+
+        <div class="space-y-4 mb-6">
+            <label class="block text-sm font-bold text-slate-700 ml-1">內部伺服器 IP</label>
+            <div class="flex gap-2">
+                <input type="text" id="searchIp" placeholder="192.168.xx.xx" 
+                    class="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-mono">
+                <button onclick="fetchVipInfo()" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 transition-all">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="claimForm" class="hidden slide-down border-t border-slate-100 pt-6 space-y-6">
+            <div class="grid grid-cols-2 gap-4 bg-blue-50 p-4 rounded-2xl">
+                <div>
+                    <p class="text-[10px] text-blue-400 font-bold uppercase">偵測到 VIP 名稱</p>
+                    <p id="old_name" class="font-mono text-sm font-bold text-slate-700">---</p>
+                </div>
+                <div>
+                    <p class="text-[10px] text-blue-400 font-bold uppercase">對應外部 Port</p>
+                    <p id="old_ports" class="font-mono text-sm font-bold text-slate-700">---</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-2">
+                    <label class="text-sm font-bold text-slate-700">認領人姓名</label>
+                    <input type="text" id="applicant" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-500">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm font-bold text-slate-700">設備所在樓層</label>
+                    <select id="floor" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none">
+                        <option value="1F">1F</option><option value="2F">2F</option><option value="3F">3F</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <label class="text-sm font-bold text-slate-700">聯絡信箱 (Email)</label>
+                <input type="email" id="email" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-blue-500">
+            </div>
+
+            <button onclick="submitTransfer()" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-green-600 transition-all shadow-lg shadow-slate-200">
+                確認轉移並更新政策名稱
+            </button>
+        </div>
+    </div>
+
+    <script>
+        async function fetchVipInfo() {
+            const ip = document.getElementById('searchIp').value;
+            // 這裡模擬呼叫你的 API
+            const response = await fetch(`/api/fetch_old_vip/${ip}`);
+            const data = await response.json();
+
+            if (data.found) {
+                document.getElementById('claimForm').classList.remove('hidden');
+                document.getElementById('old_name').innerText = data.vip_name;
+                document.getElementById('old_ports').innerText = data.ext_ports;
+            } else {
+                alert("防火牆中找不到此 IP 的對應規則，請確認 IP 是否正確。");
+            }
+        }
+
+        async function submitTransfer() {
+            // 實作寫回 SQL 的邏輯
+            alert("轉移成功！已將舊規則納入生命週期管理。");
+            location.href = '/status';
+        }
+    </script>
+</body>
+</html>

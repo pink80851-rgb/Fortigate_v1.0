@@ -1,0 +1,29 @@
+# 1. 敏感資訊與環境變數 (最重要)
+.env
+*.db
+instance/
+
+# 2. Python 快取與編譯檔
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.tox/
+
+# 3. 開發工具與版本控制
+.git
+.gitignore
+.vscode/
+.idea/
+
+# 4. 你的自動化產出檔案 (避免測試資料塞進 Image)
+storage/
+*.docx
+!template.docx
+*.log
+
+# 5. Docker 相關
+Dockerfile
+.dockerignore
+

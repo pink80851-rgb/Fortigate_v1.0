@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIP 服務自動分配系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .nav-glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-800 to-slate-900 min-h-screen flex flex-col items-center justify-center p-4">
+
+    <nav class="fixed top-0 left-0 w-full nav-glass py-4 px-8 flex justify-end gap-6 z-50">
+        <a href="/status" class="text-gray-300 hover:text-rose-400 text-sm font-bold transition">🔍 查詢進度</a>
+        <a href="/login" class="text-gray-300 hover:text-rose-400 text-sm font-bold transition">🔒 管理員登入</a>
+    </nav>
+
+    <div class="glass-morphism p-8 rounded-3xl shadow-2xl w-full max-w-lg mt-16">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-extrabold text-gray-800 tracking-tight">VIP 服務申請</h2>
+            <p class="text-sm text-gray-500 mt-2 italic">通過審核後系統將自動生成 S-410-02 申請單</p>
+        </div>
+        
+        <form id="vipForm" action="{{ url_for('submit_apply') }}" method="POST" class="space-y-5">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="col-span-2 sm:col-span-1">
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">申請單位 (部門)</label>
+                    <input type="text" name="dept" required placeholder="例如: 研發部"
+                        class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-rose-500 outline-none transition">
+                </div>
+                <div class="col-span-2 sm:col-span-1">
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">申請人姓名</label>
+                    <input type="text" name="applicant" required placeholder="王小明"
+                        class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-rose-500 outline-none transition">
+                </div>
+                <div class="col-span-2 sm:col-span-1">
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">所在樓層</label>
+                    <select name="floor" required 
+                        class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-rose-500 outline-none cursor-pointer">
+                        <option value="" disabled selected>請選擇...</option>
+                        <option value="B2">B2</option><option value="B1">B1</option>
+                        <option value="1F">1F</option><option value="2F">2F</option>
+                        <option value="3F">3F</option><option value="4F">4F</option>
+                        <option value="5F">5F</option><option value="6F">6F</option>
+                        <option value="7F">7F</option>
+                    </select>
+                </div>
+                <div class="col-span-2 sm:col-span-1">
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">通知信箱</label>
+                    <input type="email" name="email" required placeholder="user@corp.com"
+                        class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-rose-500 outline-none">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">申請需求說明</label>
+                <textarea name="reason" required rows="3" 
+                    placeholder="請簡述申請目的 (此內容將自動填入紙本申請單)"
+                    class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-rose-500 outline-none transition text-sm"></textarea>
+            </div>
+
+            <hr class="border-gray-100">
+
+            <div>
+                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">內部服務 Port</label>
+                <input type="text" name="int_port" required 
+                    placeholder="例如: 80, 443"
+                    class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-rose-500 outline-none font-mono">
+                <p class="text-[9px] text-gray-400 mt-2 italic">* 多個 Port 請用逗號隔開</p>
+            </div>
+
+            <button type="submit" 
+                class="w-full bg-rose-600 hover:bg-rose-700 text-white py-4 rounded-2xl font-black text-lg shadow-xl shadow-rose-900/20 active:scale-[0.98] transition-all mt-2">
+                確認並送出申請
+            </button>
+        </form>
+    </div>
+<script>
+// 監聽表單送出事件
+document.getElementById('vipForm').addEventListener('submit', async function(e) {
+    e.preventDefault(); // 阻止頁面跳轉
+    
+    // 取得表單內容
+    const formData = new FormData(this);
+    
+    try {
+        // 發送到後端
+        const response = await fetch('/submit_apply', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            // 彈出序號視窗 (這裡你可以用簡單的 alert，或是剛才說的 SweetAlert)
+            alert(`🎉 申請已送出！\n\n您的單據序號為：${result.req_no}\n\n請務必記下此序號以便後續追蹤。`);
+            
+            // 點完確定後，清空表單或是重新整理
+            window.location.reload(); 
+        } else {
+            alert("❌ 發生錯誤：" + result.message);
+        }
+    } catch (error) {
+        console.error("提交失敗:", error);
+        alert("連線後端出錯，請檢查網路或 Flask 狀態。");
+    }
+});
+</script>
+</body>
+</html>
