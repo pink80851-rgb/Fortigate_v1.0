@@ -1,0 +1,38 @@
+flowchart TD
+    %% --- 前端與申請 ---
+    A[使用者填寫申請表單] --> B[提交表單 /submit_apply]
+    B --> C[產生 Ticket ID]
+    C --> D[存入 VIPRequest 資料庫]
+    D --> E[寄送審核通知郵件]
+    D --> F[生成 Word 文件]
+
+    %% --- 管理員分配資源 ---
+    G[管理員分配資源 /assign_request/<id>] --> H[取得待分配 IP/Port 資源]
+    H --> I[更新 VIPRequest 資料庫狀態 status=2]
+    I --> J[生成 Word 文件]
+    J --> K[寄送資源分配通知郵件]
+
+    %% --- FortiGate 開通 ---
+    L[管理員批准 /approve_request/<id>] --> M[呼叫 FortiGateConnector.create_vip_and_attach]
+    M --> N{成功?}
+    N -->|是| O[更新 VIPRequest 狀態 status=3, 設定 expire_date]
+    O --> P[寄送開通通知郵件]
+    N -->|否| Q[回傳錯誤訊息給前端]
+
+    %% --- 回收與刪除 ---
+    R[管理員刪除 /delete_vip/<id>] --> S[呼叫 FortiGateConnector.delete_vip_from_fortigate]
+    S --> T{成功?}
+    T -->|是| U[更新 VIPRequest 狀態 status=4 已回收]
+    T -->|否| V[回傳刪除錯誤訊息]
+
+    %% --- 檢查狀態 API ---
+    W[使用者查詢狀態 /api/check_status/<ticket_id>] --> X[從資料庫查詢 ticket_id]
+    X --> Y{找到?}
+    Y -->|是| Z[回傳前端狀態資訊]
+    Y -->|否| AA[回傳錯誤訊息]
+
+    %% --- 連線 ---
+    B --> G
+    G --> L
+    L --> W
+    R --> W
